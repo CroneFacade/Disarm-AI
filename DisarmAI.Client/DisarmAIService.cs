@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Communications;
@@ -8,32 +11,32 @@ using NFive.SDK.Client.Interface;
 using NFive.SDK.Client.Services;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models.Player;
-using CroneFacade.DisarmAI.Client.Overlays;
 
 namespace CroneFacade.DisarmAI.Client
 {
 	[PublicAPI]
 	public class DisarmAIService : Service
 	{
-		private DisarmAIOverlay overlay;
-
 		public DisarmAIService(ILogger logger, ITickManager ticks, ICommunicationManager comms, ICommandManager commands, IOverlayManager overlay, User user) : base(logger, ticks, comms, commands, overlay, user) { }
 
 		public override async Task Started()
 		{
-			// Create overlay
-			this.overlay = new DisarmAIOverlay(this.OverlayManager);
-
 			// Attach a tick handler
 			this.Ticks.On(OnTick);
+			API.DisablePlayerVehicleRewards(API.PlayerId());
 		}
 
 		private async Task OnTick()
 		{
-			this.Logger.Debug("Hello World!");
-			// Do something every frame
+			var peds = World.GetAllPeds().Where(x=> x.IsHuman && !x.IsPlayer);
 
-			await Delay(TimeSpan.FromSeconds(1));
+			foreach (var ped in peds)
+			{
+				API.RemoveAllPedWeapons(ped.Handle, true);
+				API.SetPedDropsWeaponsWhenDead(ped.Handle, false);
+			}
+
+			await Delay(TimeSpan.FromSeconds(3));
 		}
 	}
 }

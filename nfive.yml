@@ -7,4 +7,3 @@ client:
   main:
     - CroneFacade.DisarmAI.Client
   files:
-    - Overlays/DisarmAIOverlay.html
